@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CampusMate — Student Productivity & Campus Hub</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Mobile Backdrop -->
+    <div id="sidebarOverlay" class="sidebar-overlay" aria-hidden="true"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="sidebar" aria-label="Primary Navigation">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">CM</div>
+        <div class="brand-text">
+          <h1>CampusMate</h1>
+          <span>Student Hub</span>
+        </div>
+        <button id="closeSidebarBtn" class="icon-btn mobile-only" type="button" aria-label="Close menu">&times;</button>
+      </div>
+
+      <nav class="nav-list">
+        <button class="nav-item active" type="button" data-section="dashboard">
+          <span class="nav-dot dot-cyan"></span>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" type="button" data-section="study">
+          <span class="nav-dot dot-blue"></span>
+          <span>StudyMate &amp; Timer</span>
+        </button>
+        <button class="nav-item" type="button" data-section="circle">
+          <span class="nav-dot dot-purple"></span>
+          <span>Study Circle</span>
+        </button>
+        <button class="nav-item" type="button" data-section="countdown">
+          <span class="nav-dot dot-cyan"></span>
+          <span>Event Countdown</span>
+        </button>
+        <button class="nav-item" type="button" data-section="notices">
+          <span class="nav-dot dot-blue"></span>
+          <span>Notice Board</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="streak-card">
+          <div class="streak-label">Study Streak</div>
+          <div id="sidebarStreak" class="streak-value">0 Days</div>
+          <div id="sidebarGoalMini" class="streak-sub">Goal: 0h 0m / day</div>
+        </div>
+        <button id="resetDemoBtn" class="btn btn-ghost btn-sm full-width" type="button">
+          Reset Demo Data
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      <!-- Top Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button id="openSidebarBtn" class="icon-btn mobile-only" type="button" aria-label="Open menu">
+            &#9776;
+          </button>
+          <div>
+            <h2 id="pageTitle" class="page-title">Dashboard</h2>
+            <p id="pageSubtitle" class="page-subtitle">Overview of your study goals, friends, deadlines, and campus notices</p>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div id="liveClock" class="clock-pill">--:--:--</div>
+          <button id="quickTimerBtn" class="btn btn-primary btn-sm" type="button">
+            Go to Timer
+          </button>
+        </div>
+      </header>
+
+      <!-- Toast Notification -->
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+      <!-- ==================== SECTION 1: DASHBOARD ==================== -->
+      <section id="section-dashboard" class="content-section active">
+        <div class="kpi-grid">
+          <article class="card kpi-card">
+            <div class="kpi-header">
+              <span>Studied Today</span>
+              <span class="badge badge-cyan">Today</span>
+            </div>
+            <div id="dashStudiedToday" class="kpi-value">0h 0m</div>
+            <div id="dashRemaining" class="kpi-sub">Remaining: 0h 0m</div>
+          </article>
+
+          <article class="card kpi-card">
+            <div class="kpi-header">
+              <span>Daily Study Goal</span>
+              <span class="badge badge-blue">Target</span>
+            </div>
+            <div id="dashDailyGoal" class="kpi-value">4h 0m</div>
+            <div class="progress-track">
+              <div id="dashGoalBar" class="progress-fill fill-blue" style="width: 0%;"></div>
+            </div>
+            <div id="dashGoalPercent" class="kpi-sub">0% completed</div>
+          </article>
+
+          <article class="card kpi-card">
+            <div class="kpi-header">
+              <span>Study Streak</span>
+              <span class="badge badge-purple">Consistency</span>
+            </div>
+            <div id="dashStreak" class="kpi-value">0 Days</div>
+            <div id="dashSessionsCount" class="kpi-sub">0 logged sessions</div>
+          </article>
+
+          <article class="card kpi-card">
+            <div class="kpi-header">
+              <span>Next Deadline</span>
+              <span class="badge badge-cyan">Countdown</span>
+            </div>
+            <div id="dashNextEventTitle" class="kpi-value kpi-sm-text">No upcoming events</div>
+            <div id="dashNextEventTimer" class="kpi-sub mono">--d --h --m --s</div>
+          </article>
+        </div>
+
+        <!-- Timer Shortcut Banner -->
+        <div class="card timer-shortcut-bar">
+          <div class="shortcut-info">
+            <span class="badge badge-blue">Live Session</span>
+            <div>
+              <strong id="dashActiveSubject">Subject: General Study</strong>
+              <span id="dashTimerReadout" class="mono timer-mini-readout">00:00:00</span>
+            </div>
+          </div>
+          <div class="shortcut-actions">
+            <button id="dashStartBtn" class="btn btn-primary btn-sm" type="button">Start</button>
+            <button id="dashPauseBtn" class="btn btn-secondary btn-sm" type="button">Pause</button>
+            <button id="dashStopBtn" class="btn btn-danger btn-sm" type="button">Stop &amp; Save</button>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="two-col-grid">
+          <article class="card">
+            <div class="card-head">
+              <h3>Weekly Study Statistics (Hours)</h3>
+              <span class="muted-text">Last 7 days</span>
+            </div>
+            <div class="canvas-wrap">
+              <canvas id="weeklyStudyChart" width="560" height="240"></canvas>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>Subject-Wise Time</h3>
+              <span class="muted-text">Total logged hours</span>
+            </div>
+            <div class="canvas-wrap">
+              <canvas id="subjectChart" width="560" height="240"></canvas>
+            </div>
+          </article>
+        </div>
+
+        <!-- Summary Panels Row -->
+        <div class="three-col-grid">
+          <article class="card">
+            <div class="card-head">
+              <h3>Study Circle Snapshot</h3>
+              <button class="link-btn" type="button" data-jump="circle">View all</button>
+            </div>
+            <p class="demo-note">Local sample friend activity (no live cross-device sync).</p>
+            <div id="dashFriendsList" class="stack-list"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>Upcoming Events</h3>
+              <button class="link-btn" type="button" data-jump="countdown">Manage</button>
+            </div>
+            <div id="dashEventsList" class="stack-list"></div>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>Recent Notices</h3>
+              <button class="link-btn" type="button" data-jump="notices">Open board</button>
+            </div>
+            <p class="demo-note">Local demonstration notices stored in your browser.</p>
+            <div id="dashNoticesList" class="stack-list"></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ==================== SECTION 2: STUDYMATÉ & TIMER ==================== -->
+      <section id="section-study" class="content-section">
+        <div class="two-col-grid">
+          <!-- Study Timer Card -->
+          <article class="card timer-card">
+            <div class="card-head">
+              <h3>Timestamp Study Timer</h3>
+              <span id="timerStatusBadge" class="badge badge-cyan">Idle</span>
+            </div>
+
+            <div class="form-group">
+              <label for="timerSubjectSelect">Active Subject</label>
+              <select id="timerSubjectSelect" class="input"></select>
+            </div>
+
+            <div id="timerDisplay" class="timer-display mono">00:00:00</div>
+            <p class="helper-text">Uses real timestamps so refreshes and laptop sleep stay accurate.</p>
+
+            <div class="btn-row center-row">
+              <button id="timerStartBtn" class="btn btn-primary" type="button">Start</button>
+              <button id="timerPauseBtn" class="btn btn-secondary" type="button" disabled>Pause</button>
+              <button id="timerResumeBtn" class="btn btn-secondary" type="button" disabled>Resume</button>
+              <button id="timerStopBtn" class="btn btn-danger" type="button" disabled>Stop &amp; Save</button>
+            </div>
+
+            <hr class="divider" />
+
+            <h4>Log Manual Study Session</h4>
+            <form id="manualSessionForm" class="inline-form">
+              <select id="manualSubjectSelect" class="input" required></select>
+              <input id="manualHours" class="input num-input" type="number" min="0" max="24" value="0" placeholder="Hrs" aria-label="Hours" required />
+              <input id="manualMinutes" class="input num-input" type="number" min="1" max="59" value="30" placeholder="Mins" aria-label="Minutes" required />
+              <button class="btn btn-secondary btn-sm" type="submit">Add Session</button>
+            </form>
+          </article>
+
+          <!-- Daily Goal & Subjects Card -->
+          <article class="card">
+            <div class="card-head">
+              <h3>Daily Study Goal</h3>
+              <span id="studyGoalPctBadge" class="badge badge-blue">0%</span>
+            </div>
+
+            <form id="dailyGoalForm" class="inline-form">
+              <div class="field-inline">
+                <label for="goalHoursInput">Hours</label>
+                <input id="goalHoursInput" class="input num-input" type="number" min="0" max="23" value="4" required />
+              </div>
+              <div class="field-inline">
+                <label for="goalMinutesInput">Minutes</label>
+                <input id="goalMinutesInput" class="input num-input" type="number" min="0" max="59" value="0" required />
+              </div>
+              <button class="btn btn-primary btn-sm" type="submit">Save Goal</button>
+            </form>
+
+            <div class="goal-stats-box">
+              <div><span>Studied Today:</span> <strong id="studyTodayReadout">0h 0m</strong></div>
+              <div><span>Target Goal:</span> <strong id="studyTargetReadout">4h 0m</strong></div>
+              <div><span>Time Remaining:</span> <strong id="studyRemainingReadout">4h 0m</strong></div>
+            </div>
+
+            <div class="progress-track lg-track">
+              <div id="studyGoalProgressBar" class="progress-fill fill-gradient" style="width: 0%;"></div>
+            </div>
+
+            <hr class="divider" />
+
+            <h4>Subjects &amp; Time Breakdown</h4>
+            <form id="addSubjectForm" class="inline-form">
+              <input id="newSubjectName" class="input" type="text" maxlength="40" placeholder="Add subject (e.g., Data Structures)" required />
+              <button class="btn btn-secondary btn-sm" type="submit">Add</button>
+            </form>
+
+            <div id="subjectsList" class="subject-list"></div>
+          </article>
+        </div>
+
+        <!-- Progress Period Summary & History -->
+        <article class="card">
+          <div class="card-head">
+            <h3>Progress Overview</h3>
+            <div class="tab-pills">
+              <button class="pill-btn active" type="button" data-period="daily">Daily</button>
+              <button class="pill-btn" type="button" data-period="weekly">Weekly</button>
+              <button class="pill-btn" type="button" data-period="monthly">Monthly</button>
+            </div>
+          </div>
+          <div id="periodSummaryText" class="period-summary"></div>
+        </article>
+
+        <article class="card">
+          <div class="card-head">
+            <h3>Study Session History</h3>
+            <button id="clearHistoryBtn" class="btn btn-ghost btn-sm" type="button">Clear History</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date &amp; Time</th>
+                  <th>Subject</th>
+                  <th>Duration</th>
+                  <th>Source</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="sessionHistoryBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <!-- ==================== SECTION 3: STUDY CIRCLE ==================== -->
+      <section id="section-circle" class="content-section">
+        <div class="banner-info">
+          <strong>Local Demo Mode:</strong> Friend profiles and study activities below are local sample data stored in your browser. Real-time multi-device friend syncing requires a backend server.
+        </div>
+
+        <div class="two-col-grid">
+          <!-- Add Friend Form -->
+          <article class="card">
+            <div class="card-head">
+              <h3>Add Friend to Study Circle</h3>
+              <span class="badge badge-purple">Local Demo</span>
+            </div>
+            <form id="addFriendForm" class="stack-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="friendName">Friend Name</label>
+                  <input id="friendName" class="input" type="text" maxlength="40" placeholder="e.g., Riya Sen" required />
+                </div>
+                <div class="form-group">
+                  <label for="friendSubject">Current Subject</label>
+                  <input id="friendSubject" class="input" type="text" maxlength="40" placeholder="e.g., Operating Systems" required />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="friendTodayHours">Studied Today (Hours)</label>
+                  <input id="friendTodayHours" class="input" type="number" step="0.25" min="0" max="18" value="2.5" required />
+                </div>
+                <div class="form-group">
+                  <label for="friendGoalHours">Daily Goal (Hours)</label>
+                  <input id="friendGoalHours" class="input" type="number" step="0.25" min="0.5" max="18" value="4" required />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="friendWeeklyHours">Weekly Hours</label>
+                  <input id="friendWeeklyHours" class="input" type="number" step="0.5" min="0" max="100" value="16" required />
+                </div>
+                <div class="form-group">
+                  <label for="friendSessions">Completed Sessions</label>
+                  <input id="friendSessions" class="input" type="number" min="0" max="200" value="5" required />
+                </div>
+              </div>
+              <button class="btn btn-primary" type="submit">Add Friend</button>
+            </form>
+          </article>
+
+          <!-- Leaderboard -->
+          <article class="card">
+            <div class="card-head">
+              <h3>Study Hours Leaderboard</h3>
+              <div class="tab-pills">
+                <button class="pill-btn lb-tab active" type="button" data-lb="today">Today</button>
+                <button class="pill-btn lb-tab" type="button" data-lb="weekly">Weekly</button>
+              </div>
+            </div>
+            <div id="leaderboardList" class="leaderboard-list"></div>
+          </article>
+        </div>
+
+        <!-- Friend Cards Grid -->
+        <article class="card">
+          <div class="card-head">
+            <h3>Friends &amp; Study Activity</h3>
+            <span id="friendCountBadge" class="badge badge-cyan">0 Members</span>
+          </div>
+          <div id="friendsGrid" class="cards-grid"></div>
+        </article>
+      </section>
+
+      <!-- ==================== SECTION 4: EVENT COUNTDOWN ==================== -->
+      <section id="section-countdown" class="content-section">
+        <div class="two-col-grid">
+          <article class="card">
+            <div class="card-head">
+              <h3 id="eventFormTitle">Create Countdown Event</h3>
+              <button id="cancelEventEditBtn" class="btn btn-ghost btn-sm hidden" type="button">Cancel Edit</button>
+            </div>
+
+            <form id="eventForm" class="stack-form">
+              <input type="hidden" id="editEventId" />
+              <div class="form-group">
+                <label for="eventTitle">Event Title</label>
+                <input id="eventTitle" class="input" type="text" maxlength="70" placeholder="e.g., DBMS End-Semester Exam" required />
+              </div>
+
+              <div class="form-group">
+                <label for="eventDescription">Description</label>
+                <textarea id="eventDescription" class="input textarea" rows="2" maxlength="200" placeholder="Syllabus chapters, submission link, or notes..."></textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="eventDateTime">Date &amp; Time</label>
+                  <input id="eventDateTime" class="input" type="datetime-local" required />
+                </div>
+                <div class="form-group">
+                  <label for="eventCategory">Category</label>
+                  <select id="eventCategory" class="input">
+                    <option value="Exam">Exam</option>
+                    <option value="Assignment">Assignment</option>
+                    <option value="College Festival">College Festival</option>
+                    <option value="Project Deadline">Project Deadline</option>
+                    <option value="Birthday">Birthday</option>
+                    <option value="Personal">Personal</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="eventPriority">Priority</label>
+                  <select id="eventPriority" class="input">
+                    <option value="High">High</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="Low">Low</option>
+                  </select>
+                </div>
+                <div class="form-group checkbox-group">
+                  <label class="checkbox-label">
+                    <input id="eventFavorite" type="checkbox" />
+                    <span>Mark as Favorite</span>
+                  </label>
+                </div>
+              </div>
+
+              <button id="eventSubmitBtn" class="btn btn-primary" type="submit">Add Countdown Event</button>
+            </form>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>Filter Countdowns</h3>
+              <span id="upcomingCountBadge" class="badge badge-cyan">0 Upcoming</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="filterEventCategory">Category</label>
+                <select id="filterEventCategory" class="input">
+                  <option value="ALL">All Categories</option>
+                  <option value="Exam">Exam</option>
+                  <option value="Assignment">Assignment</option>
+                  <option value="College Festival">College Festival</option>
+                  <option value="Project Deadline">Project Deadline</option>
+                  <option value="Birthday">Birthday</option>
+                  <option value="Personal">Personal</option>
+                </select>
+              </div>
+              <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                  <input id="filterEventFavOnly" type="checkbox" />
+                  <span>Favorites Only</span>
+                </label>
+              </div>
+            </div>
+            <p class="helper-text">Live timers update every second automatically and move past deadlines to Completed.</p>
+          </article>
+        </div>
+
+        <article class="card">
+          <div class="card-head">
+            <h3>Upcoming Events</h3>
+          </div>
+          <div id="upcomingEventsGrid" class="cards-grid"></div>
+        </article>
+
+        <article class="card">
+          <div class="card-head">
+            <h3>Completed Events</h3>
+            <span id="completedCountBadge" class="badge badge-purple">0 Completed</span>
+          </div>
+          <div id="completedEventsGrid" class="cards-grid"></div>
+        </article>
+      </section>
+
+      <!-- ==================== SECTION 5: DIGITAL NOTICE BOARD ==================== -->
+      <section id="section-notices" class="content-section">
+        <div class="banner-info">
+          <strong>Local Notice Board:</strong> Notices are stored locally in your browser as demonstration college notices (not synced across a campus backend).
+        </div>
+
+        <div class="two-col-grid">
+          <article class="card">
+            <div class="card-head">
+              <h3 id="noticeFormTitle">Post New Notice</h3>
+              <button id="cancelNoticeEditBtn" class="btn btn-ghost btn-sm hidden" type="button">Cancel Edit</button>
+            </div>
+
+            <form id="noticeForm" class="stack-form">
+              <input type="hidden" id="editNoticeId" />
+              <div class="form-group">
+                <label for="noticeTitle">Notice Title</label>
+                <input id="noticeTitle" class="input" type="text" maxlength="90" placeholder="e.g., Mid-Term Lab Schedule Released" required />
+              </div>
+
+              <div class="form-group">
+                <label for="noticeBody">Details</label>
+                <textarea id="noticeBody" class="input textarea" rows="3" maxlength="320" placeholder="Write notice instructions, venue, or announcement details..." required></textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="noticeCategory">Category</label>
+                  <select id="noticeCategory" class="input">
+                    <option value="Academics">Academics</option>
+                    <option value="Exams">Exams</option>
+                    <option value="Events">Events</option>
+                    <option value="Scholarships">Scholarships</option>
+                    <option value="General">General</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="noticePriority">Priority</label>
+                  <select id="noticePriority" class="input">
+                    <option value="High">High</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="Low">Low</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="noticeDate">Notice Date</label>
+                  <input id="noticeDate" class="input" type="date" required />
+                </div>
+                <div class="form-group checkbox-group">
+                  <label class="checkbox-label">
+                    <input id="noticePinned" type="checkbox" />
+                    <span>Pin to Top</span>
+                  </label>
+                </div>
+              </div>
+
+              <button id="noticeSubmitBtn" class="btn btn-primary" type="submit">Publish Notice</button>
+            </form>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>Search &amp; Filter Notices</h3>
+              <span id="noticeStatsBadge" class="badge badge-blue">0 Notices</span>
+            </div>
+
+            <div class="form-group">
+              <label for="noticeSearchInput">Search Keywords</label>
+              <input id="noticeSearchInput" class="input" type="search" placeholder="Search title, category, or details..." />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="noticeCategoryFilter">Category</label>
+                <select id="noticeCategoryFilter" class="input">
+                  <option value="ALL">All Categories</option>
+                  <option value="Academics">Academics</option>
+                  <option value="Exams">Exams</option>
+                  <option value="Events">Events</option>
+                  <option value="Scholarships">Scholarships</option>
+                  <option value="General">General</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="noticeSortSelect">Sort By</label>
+                <select id="noticeSortSelect" class="input">
+                  <option value="newest">Date (Newest First)</option>
+                  <option value="oldest">Date (Oldest First)</option>
+                  <option value="priority">Priority (High to Low)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="filter-toggles">
+              <label class="checkbox-label">
+                <input id="noticeBookmarkOnly" type="checkbox" />
+                <span>Bookmarked Only</span>
+              </label>
+              <label class="checkbox-label">
+                <input id="noticeUnreadOnly" type="checkbox" />
+                <span>Unread Only</span>
+              </label>
+            </div>
+          </article>
+        </div>
+
+        <article class="card">
+          <div class="card-head">
+            <h3>Campus Notices</h3>
+          </div>
+          <div id="noticesList" class="notices-list"></div>
+        </article>
+      </section>
+    </div>
+  </div>
+</body>
+</html>
